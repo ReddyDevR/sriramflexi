@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, ArrowRight, Check, Clock, Sparkles, Search, X } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function ProductsPage({ onOrderProduct }) {
   const [products, setProducts] = useState([]);
@@ -10,7 +11,7 @@ export default function ProductsPage({ onOrderProduct }) {
 
   // Fetch categories
   useEffect(() => {
-    fetch('http://localhost:5000/api/products/categories')
+    fetch(`${API_BASE_URL}/api/products/categories`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -22,7 +23,7 @@ export default function ProductsPage({ onOrderProduct }) {
 
   // Fetch products (Customer view: only isUsed !== false)
   useEffect(() => {
-    let url = `http://localhost:5000/api/products?category=${category}`;
+    let url = `${API_BASE_URL}/api/products?category=${category}`;
     if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
 
     fetch(url)
