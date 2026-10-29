@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CreditCard, QrCode, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function PaymentModal({ order, onClose, onSuccess }) {
   const [paymentMode, setPaymentMode] = useState('UPI_QR');
@@ -17,7 +18,7 @@ export default function PaymentModal({ order, onClose, onSuccess }) {
 
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch('http://localhost:5000/api/payments/submit', {
+      const res = await fetch(`${API_BASE_URL}/api/payments/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
