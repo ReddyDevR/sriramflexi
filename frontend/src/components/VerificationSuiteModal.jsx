@@ -10,6 +10,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import soundManager from '../utils/soundAlerts';
+import { API_BASE_URL } from '../config/api';
 
 export default function VerificationSuiteModal({ isOpen, onClose }) {
   if (!isOpen) return null;
@@ -50,7 +51,7 @@ export default function VerificationSuiteModal({ isOpen, onClose }) {
     if (scenarioId === 8) soundManager.playRequestAlert();
 
     try {
-      const res = await fetch('http://localhost:5000/api/admin/test-scenario', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/test-scenario`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
