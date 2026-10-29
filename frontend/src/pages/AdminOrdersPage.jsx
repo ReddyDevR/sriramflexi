@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import OrderTimeline from '../components/OrderTimeline';
 import { 
+import { API_BASE_URL } from '../config/api';
   Package, 
   Printer, 
   CheckCircle2, 
@@ -23,7 +24,7 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = () => {
     const token = localStorage.getItem('sri_ramu_token');
-    fetch(`http://localhost:5000/api/orders/admin/all?status=${statusFilter}`, {
+    fetch(`${API_BASE_URL}/api/orders/admin/all?status=${statusFilter}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -51,7 +52,7 @@ export default function AdminOrdersPage() {
     const token = localStorage.getItem('sri_ramu_token');
 
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/admin/${orderId}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/admin/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
