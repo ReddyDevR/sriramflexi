@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { 
+import { API_BASE_URL } from '../config/api';
   Send, 
   Megaphone, 
   Tag, 
@@ -36,7 +37,7 @@ export default function AdminAnnouncementsPage() {
 
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch('http://localhost:5000/api/admin/announcements', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/announcements`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
