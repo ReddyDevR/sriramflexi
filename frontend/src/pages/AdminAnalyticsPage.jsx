@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+import { API_BASE_URL } from '../config/api';
   BarChart2, 
   Mail, 
   Smartphone, 
@@ -22,9 +23,9 @@ export default function AdminAnalyticsPage() {
   const fetchData = () => {
     const token = localStorage.getItem('sri_ramu_token');
     Promise.all([
-      fetch('http://localhost:5000/api/admin/notifications/analytics', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch('http://localhost:5000/api/admin/notifications/delivery-logs', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch('http://localhost:5000/api/admin/notifications/email-logs', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+      fetch(`${API_BASE_URL}/api/admin/notifications/analytics`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/admin/notifications/delivery-logs`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/admin/notifications/email-logs`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
     ]).then(([analyticsData, deliveryData, emailData]) => {
       if (analyticsData.success) setAnalytics(analyticsData.analytics);
       if (deliveryData.success) setDeliveryLogs(deliveryData.logs || []);
@@ -43,7 +44,7 @@ export default function AdminAnalyticsPage() {
   const handleRetry = async (logId, type) => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/notifications/retry/${logId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/notifications/retry/${logId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
