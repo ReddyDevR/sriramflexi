@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import OrderTimeline from '../components/OrderTimeline';
 import PaymentModal from '../components/PaymentModal';
 import { 
-import { API_BASE_URL } from '../config/api';
   Package, 
   CreditCard, 
   Clock, 
@@ -14,6 +13,7 @@ import { API_BASE_URL } from '../config/api';
   Printer,
   ChevronRight
 } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function CustomerOrdersPage({ selectedOrderId, onClearSelectedOrder }) {
   const [orders, setOrders] = useState([]);
