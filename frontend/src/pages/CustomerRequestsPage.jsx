@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
+import { API_BASE_URL } from '../config/api';
   FileText, 
   Send, 
   CheckCircle2, 
@@ -24,7 +25,7 @@ export default function CustomerRequestsPage() {
 
   const fetchRequests = () => {
     const token = localStorage.getItem('sri_ramu_token');
-    fetch('http://localhost:5000/api/requests/my-requests', {
+    fetch(`${API_BASE_URL}/api/requests/my-requests`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -48,7 +49,7 @@ export default function CustomerRequestsPage() {
     const token = localStorage.getItem('sri_ramu_token');
 
     try {
-      const res = await fetch('http://localhost:5000/api/requests/quotation', {
+      const res = await fetch(`${API_BASE_URL}/api/requests/quotation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export default function CustomerRequestsPage() {
   const handleAcceptQuotation = async (requestId) => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/requests/${requestId}/accept-quotation`, {
+      const res = await fetch(`${API_BASE_URL}/api/requests/${requestId}/accept-quotation`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
