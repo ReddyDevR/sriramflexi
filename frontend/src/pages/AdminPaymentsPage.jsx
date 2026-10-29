@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+import { API_BASE_URL } from '../config/api';
   CreditCard, 
   CheckCircle2, 
   XCircle, 
@@ -18,8 +19,8 @@ export default function AdminPaymentsPage() {
   const fetchPayments = () => {
     const token = localStorage.getItem('sri_ramu_token');
     const endpoint = filter === 'PENDING' 
-      ? 'http://localhost:5000/api/payments/admin/pending'
-      : 'http://localhost:5000/api/payments/admin/all';
+      ? `${API_BASE_URL}/api/payments/admin/pending`
+      : `${API_BASE_URL}/api/payments/admin/all`;
 
     fetch(endpoint, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -42,7 +43,7 @@ export default function AdminPaymentsPage() {
   const handleVerify = async (paymentId) => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/payments/admin/${paymentId}/verify`, {
+      const res = await fetch(`${API_BASE_URL}/api/payments/admin/${paymentId}/verify`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -61,7 +62,7 @@ export default function AdminPaymentsPage() {
 
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/payments/admin/${paymentId}/reject`, {
+      const res = await fetch(`${API_BASE_URL}/api/payments/admin/${paymentId}/reject`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
