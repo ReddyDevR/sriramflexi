@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-import { API_BASE_URL } from '../config/api';
   Layers, 
   Plus, 
   Edit, 
@@ -19,6 +18,7 @@ import { API_BASE_URL } from '../config/api';
   Eye,
   EyeOff
 } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function AdminServicesPage() {
   const [activeTab, setActiveTab] = useState('services'); // 'services' | 'categories'
