@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-import { API_BASE_URL } from '../config/api';
   BarChart2, 
   Mail, 
   Smartphone, 
@@ -11,6 +10,7 @@ import { API_BASE_URL } from '../config/api';
   X,
   RotateCcw
 } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function AdminAnalyticsPage() {
   const [tab, setTab] = useState('ANALYTICS');
