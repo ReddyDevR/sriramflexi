@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+import { API_BASE_URL } from '../config/api';
   Layers, 
   Plus, 
   Edit, 
@@ -67,7 +68,7 @@ export default function AdminServicesPage() {
   // Load products (all, including disabled for Admin)
   const fetchProducts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products?includeDisabled=true');
+      const res = await fetch(`${API_BASE_URL}/api/products?includeDisabled=true`);
       const data = await res.json();
       if (data.success) {
         setProducts(data.products || []);
@@ -80,7 +81,7 @@ export default function AdminServicesPage() {
   // Load categories
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products/categories?includeInactive=true');
+      const res = await fetch(`${API_BASE_URL}/api/products/categories?includeInactive=true`);
       const data = await res.json();
       if (data.success) {
         setCategories(data.categories || []);
@@ -100,7 +101,7 @@ export default function AdminServicesPage() {
   // Toggle "Used / Not Used" status of a product
   const handleToggleUsed = async (product) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${product._id}/toggle-used`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${product._id}/toggle-used`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -121,7 +122,7 @@ export default function AdminServicesPage() {
   const handleDeleteProduct = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -186,7 +187,7 @@ export default function AdminServicesPage() {
 
     try {
       if (editingProduct) {
-        const res = await fetch(`http://localhost:5000/api/products/${editingProduct._id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/products/${editingProduct._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -200,7 +201,7 @@ export default function AdminServicesPage() {
           showToast(`Service "${data.product.name}" updated successfully`);
         }
       } else {
-        const res = await fetch('http://localhost:5000/api/products', {
+        const res = await fetch(`${API_BASE_URL}/api/products`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -248,7 +249,7 @@ export default function AdminServicesPage() {
     e.preventDefault();
     try {
       if (editingCategory) {
-        const res = await fetch(`http://localhost:5000/api/products/categories/${editingCategory._id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/products/categories/${editingCategory._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -262,7 +263,7 @@ export default function AdminServicesPage() {
           showToast(`Category "${data.category.name}" updated`);
         }
       } else {
-        const res = await fetch('http://localhost:5000/api/products/categories', {
+        const res = await fetch(`${API_BASE_URL}/api/products/categories`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -287,7 +288,7 @@ export default function AdminServicesPage() {
   const handleDeleteCategory = async (id, name) => {
     if (!window.confirm(`Delete category "${name}"? Products in this category will remain.`)) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/products/categories/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/categories/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
