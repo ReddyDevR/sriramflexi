@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sliders, Save, Check, RefreshCw } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState({});
@@ -8,7 +9,7 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = () => {
     const token = localStorage.getItem('sri_ramu_token');
-    fetch('http://localhost:5000/api/admin/notifications/settings', {
+    fetch(`${API_BASE_URL}/api/admin/notifications/settings`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -39,7 +40,7 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch('http://localhost:5000/api/admin/notifications/settings', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/notifications/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
