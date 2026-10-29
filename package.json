@@ -1,0 +1,11 @@
+{
+  "name": "sri-ramu-digital",
+  "version": "2.0.0",
+  "description": "Sri Ramu Digital — Flex & Offset Printing with Real-Time Notification & Communication System",
+  "scripts": {
+    "start": "node backend/server.js",
+    "backend": "cd backend && node server.js",
+    "frontend": "cd frontend && node ./node_modules/vite/bin/vite.js --host 0.0.0.0 --port 5173",
+    "build:frontend": "cd frontend && node ./node_modules/vite/bin/vite.js build"
+  }
+}
