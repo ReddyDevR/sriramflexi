@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import OrderTimeline from '../components/OrderTimeline';
 import PaymentModal from '../components/PaymentModal';
 import { 
+import { API_BASE_URL } from '../config/api';
   Package, 
   CreditCard, 
   Clock, 
@@ -25,7 +26,7 @@ export default function CustomerOrdersPage({ selectedOrderId, onClearSelectedOrd
 
   const fetchOrders = () => {
     const token = localStorage.getItem('sri_ramu_token');
-    fetch('http://localhost:5000/api/orders/my-orders', {
+    fetch(`${API_BASE_URL}/api/orders/my-orders`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -55,7 +56,7 @@ export default function CustomerOrdersPage({ selectedOrderId, onClearSelectedOrd
 
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/cancel-request`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/cancel-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
