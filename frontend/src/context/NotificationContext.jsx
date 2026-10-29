@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useSocket } from './SocketContext';
+import { API_BASE_URL } from '../config/api';
 
 const NotificationContext = createContext();
 
@@ -34,7 +35,7 @@ export const NotificationProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('sri_ramu_token');
-      const url = `http://localhost:5000/api/notifications?category=${filterCategory}&limit=50`;
+      const url = `${API_BASE_URL}/api/notifications?category=${filterCategory}&limit=50`;
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -101,7 +102,7 @@ export const NotificationProvider = ({ children }) => {
       }
 
       // Fetch VAPID public key
-      const keyRes = await fetch('http://localhost:5000/api/notifications/vapid-public-key');
+      const keyRes = await fetch(`${API_BASE_URL}/api/notifications/vapid-public-key`);
       const keyData = await keyRes.json();
       if (!keyData.publicKey) {
         console.warn('VAPID public key not found on backend');
@@ -118,7 +119,7 @@ export const NotificationProvider = ({ children }) => {
 
       // Post subscription to backend
       const token = localStorage.getItem('sri_ramu_token');
-      await fetch('http://localhost:5000/api/notifications/push-subscribe', {
+      await fetch(`${API_BASE_URL}/api/notifications/push-subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ export const NotificationProvider = ({ children }) => {
   const markAsRead = async (id) => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+      await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -156,7 +157,7 @@ export const NotificationProvider = ({ children }) => {
   const markAllAsRead = async () => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      await fetch(`http://localhost:5000/api/notifications/mark-all-read`, {
+      await fetch(`${API_BASE_URL}/api/notifications/mark-all-read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -170,7 +171,7 @@ export const NotificationProvider = ({ children }) => {
   const deleteNotification = async (id) => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}`, {
+      await fetch(`${API_BASE_URL}/api/notifications/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
