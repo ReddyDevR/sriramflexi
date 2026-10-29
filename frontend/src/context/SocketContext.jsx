@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import soundManager from '../utils/soundAlerts';
 import { startTabTitleAlert, stopTabTitleAlert } from '../utils/tabTitleManager';
+import { API_BASE_URL } from '../config/api';
 
 const SocketContext = createContext();
 
@@ -20,7 +21,7 @@ export const SocketProvider = ({ children }) => {
   const [activeAlert, setActiveAlert] = useState(null);
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:5000', {
+    const socketInstance = io(`${API_BASE_URL}`, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 20,
       reconnectionDelay: 2000
