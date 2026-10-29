@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
+import { API_BASE_URL } from '../config/api';
   PackageCheck, 
   ArrowRight, 
   Tag, 
@@ -166,7 +167,7 @@ export default function OrderCheckoutPage({ selectedProduct, initialConfig, onOr
         paymentMode
       };
 
-      const res = await fetch('http://localhost:5000/api/orders', {
+      const res = await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
