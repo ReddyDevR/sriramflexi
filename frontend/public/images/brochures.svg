@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" fill="none">
+  <defs>
+    <linearGradient id="brochurePage" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" rx="12" fill="#0f172a" />
+  <!-- Trifold Panels with 3D Angles -->
+  <!-- Left Panel -->
+  <polygon points="50,60 140,45 140,205 50,195" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5" />
+  <!-- Center Panel -->
+  <polygon points="140,45 260,45 260,205 140,205" fill="url(#brochurePage)" stroke="#cbd5e1" stroke-width="1.5" />
+  <!-- Right Panel -->
+  <polygon points="260,45 350,60 350,195 260,205" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" />
+  <!-- Center Cover Elements -->
+  <rect x="155" y="60" width="90" height="40" rx="4" fill="#0284c7" />
+  <text x="200" y="85" font-family="'Outfit', sans-serif" font-weight="900" font-size="12" fill="#ffffff" text-anchor="middle">TRIFOLD</text>
+  <text x="200" y="115" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="10" fill="#0f172a" text-anchor="middle">OFFSET BROCHURE</text>
+  <text x="200" y="130" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="8" fill="#64748b" text-anchor="middle">170 GSM Gloss Art Paper</text>
+  <!-- Mini text lines -->
+  <rect x="160" y="145" width="80" height="4" rx="2" fill="#cbd5e1" />
+  <rect x="160" y="155" width="65" height="4" rx="2" fill="#cbd5e1" />
+  <rect x="160" y="165" width="75" height="4" rx="2" fill="#cbd5e1" />
+  <rect x="160" y="175" width="50" height="4" rx="2" fill="#cbd5e1" />
+  <!-- Left panel preview -->
+  <rect x="65" y="80" width="60" height="25" rx="3" fill="#f59e0b" opacity="0.8" />
+  <rect x="65" y="115" width="60" height="4" rx="2" fill="#94a3b8" />
+  <rect x="65" y="125" width="50" height="4" rx="2" fill="#94a3b8" />
+  <!-- Right panel preview -->
+  <rect x="275" y="80" width="60" height="25" rx="3" fill="#10b981" opacity="0.8" />
+  <rect x="275" y="115" width="60" height="4" rx="2" fill="#94a3b8" />
+  <rect x="275" y="125" width="50" height="4" rx="2" fill="#94a3b8" />
+  <text x="200" y="238" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="11" fill="#94a3b8" text-anchor="middle">Heidelberg Multi-Color Speedmaster Offset Press</text>
+</svg>

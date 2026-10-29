@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" fill="none">
+  <defs>
+    <linearGradient id="standeeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" rx="12" fill="#0f172a" />
+  <!-- Aluminium Base Stand -->
+  <rect x="130" y="215" width="140" height="15" rx="4" fill="#94a3b8" stroke="#cbd5e1" stroke-width="2" />
+  <rect x="120" y="226" width="30" height="4" rx="2" fill="#64748b" />
+  <rect x="250" y="226" width="30" height="4" rx="2" fill="#64748b" />
+  <!-- Vertical Support Pole Behind -->
+  <line x1="200" y1="215" x2="200" y2="25" stroke="#cbd5e1" stroke-width="4" />
+  <!-- Top Aluminium Clamp -->
+  <rect x="140" y="20" width="120" height="8" rx="2" fill="#94a3b8" />
+  <!-- Standee Synthetic Banner Film (6x3) -->
+  <rect x="142" y="28" width="116" height="187" fill="url(#standeeGrad)" stroke="#38bdf8" stroke-width="1.5" />
+  <!-- Graphic on Standee -->
+  <circle cx="200" cy="65" r="22" fill="#ffffff" />
+  <path d="M192 65L200 52L208 65H192Z" fill="#0284c7" />
+  <text x="200" y="105" font-family="'Outfit', sans-serif" font-weight="900" font-size="12" fill="#ffffff" text-anchor="middle">ROLLUP</text>
+  <text x="200" y="120" font-family="'Outfit', sans-serif" font-weight="900" font-size="12" fill="#ffffff" text-anchor="middle">STANDEE</text>
+  <text x="200" y="136" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="7" fill="#bae6fd" text-anchor="middle">6FT X 3FT PORTABLE</text>
+  <rect x="155" y="148" width="90" height="16" rx="4" fill="#ffffff" />
+  <text x="200" y="159" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="7" fill="#1e3a8a" text-anchor="middle">ALUMINIUM CASSETTE</text>
+  <text x="200" y="180" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="6" fill="#e2e8f0" text-anchor="middle">Non-Tearable Matte Film</text>
+  <text x="200" y="192" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="6" fill="#e2e8f0" text-anchor="middle">Padded Carry Bag Included</text>
+  <text x="200" y="248" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="11" fill="#94a3b8" text-anchor="middle">Exhibitions, Trade Fairs, Showrooms &amp; Events</text>
+</svg>
