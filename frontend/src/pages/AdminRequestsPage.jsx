@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+import { API_BASE_URL } from '../config/api';
   FileText, 
   Send, 
   CheckCircle2, 
@@ -19,7 +20,7 @@ export default function AdminRequestsPage() {
 
   const fetchRequests = () => {
     const token = localStorage.getItem('sri_ramu_token');
-    fetch('http://localhost:5000/api/requests/admin/all', {
+    fetch(`${API_BASE_URL}/api/requests/admin/all`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -50,7 +51,7 @@ export default function AdminRequestsPage() {
 
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/requests/admin/${requestId}/respond`, {
+      const res = await fetch(`${API_BASE_URL}/api/requests/admin/${requestId}/respond`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ export default function AdminRequestsPage() {
   const handleResolveCancellation = async (requestId, approved) => {
     const token = localStorage.getItem('sri_ramu_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/requests/admin/${requestId}/respond`, {
+      const res = await fetch(`${API_BASE_URL}/api/requests/admin/${requestId}/respond`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
