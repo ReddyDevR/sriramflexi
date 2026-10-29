@@ -1,12 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
-import { API_BASE_URL } from '../config/api';
-  PackageCheck, 
-  ArrowRight, 
-  Tag, 
-  AlertCircle, 
-  ShieldCheck, 
+import {
+  PackageCheck,
+  ArrowRight,
+  Tag,
+  AlertCircle,
+  ShieldCheck,
   Sparkles,
   Info,
   Upload,
@@ -17,6 +16,8 @@ import { API_BASE_URL } from '../config/api';
   CheckCircle2,
   Layers
 } from 'lucide-react';
+
+import { API_BASE_URL } from '../config/api';
 
 export default function OrderCheckoutPage({ selectedProduct, initialConfig, onOrderSuccess, onCancel }) {
   const { user } = useAuth();
