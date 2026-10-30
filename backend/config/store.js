@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+const DB_FILE = path.join(
+  __dirname,
+  '..',
+  'data',
+  'db.json'
+);
 const { isDbConnected } = require('./db');
 
 const DB_FILE = path.join(__dirname, '..', 'data', 'db.json');
