@@ -4,24 +4,11 @@ import { API_BASE_URL } from '../config/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('sri_ramu_user');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { }
-    }
-    // Default to sample Customer for initial view, switchable anytime
-    return {
-      _id: 'user_cust_001',
-      name: 'Maheswar Reddy',
-      email: 'maheswar@gmail.com',
-      role: 'CUSTOMER',
-      phone: '+91 94401 56789',
-      company: 'Reddy Agro Tech',
-      address: 'Shop #12, Market Yard, Guntur, AP'
-    };
-  });
+ const [user, setUser] = useState(null);
 
-  const [token, setToken] = useState(() => localStorage.getItem('sri_ramu_token') || 'demo_token');
+  const [token, setToken] = useState(
+  () => localStorage.getItem('sri_ramu_token') || null
+);
   const [preferences, setPreferences] = useState({
     email: { orders: true, payments: true, offers: true, system: true },
     push: { orders: true, payments: true, offers: true, system: true },
@@ -36,32 +23,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Switch role helper for live testing
-  const switchRole = (newRole) => {
-    if (newRole === 'ADMIN') {
-      const adminUser = {
-        _id: 'user_admin_001',
-        name: 'Ramu S. (Managing Director)',
-        email: 'admin@sriramuprinting.com',
-        role: 'ADMIN',
-        phone: '+91 98480 12345',
-        company: 'Sri Ramu Digital Press'
-      };
-      setUser(adminUser);
-    } else {
-      const custUser = {
-        _id: 'user_cust_001',
-        name: 'Maheswar Reddy',
-        email: 'maheswar@gmail.com',
-        role: 'CUSTOMER',
-        phone: '+91 94401 56789',
-        company: 'Reddy Agro Tech',
-        address: 'Shop #12, Market Yard, Guntur, AP'
-      };
-      setUser(custUser);
-    }
-  };
-
+  
   const login = async (email, password) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
