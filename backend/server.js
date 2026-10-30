@@ -6,7 +6,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const { connectDB } = require('./config/db');
 const store = require('./config/store');
-const { getSeedData } = require('./data/seedData');
+//duplicate error seeddata
 const { initSocket } = require('./services/socketService');
 const initializeAdmin = require('./config/initializeAdmin');
 
