@@ -1,27 +1,48 @@
-const store = require('../config/store');
+const mongoose = require('mongoose');
+
+const Product = require('../models/Product');
+const Category = require('../models/Category');
+
+// Validate MongoDB ID
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // GET /api/products/categories
-const getCategories = (req, res) => {
+const getCategories = async (req, res) => {
   try {
-    const { includeInactive } = req.query;
-    let categories = store.getCollection('categories');
-    if (includeInactive !== 'true') {
-      categories = categories.filter(c => c.isActive !== false);
+    const filter = {};
+
+    if (req.query.includeInactive !== 'true') {
+      filter.isActive = { $ne: false };
     }
-    res.json({ success: true, count: categories.length, categories });
+
+    const categories = await Category.find(filter).sort({ name: 1 });
+
+    return res.json({
+      success: true,
+      count: categories.length,
+      categories
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// POST /api/products/categories (Admin)
-const createCategory = (req, res) => {
+// POST /api/products/categories
+const createCategory = async (req, res) => {
   try {
     const { name, icon, description, isActive = true } = req.body;
-    if (!name) return res.status(400).json({ message: 'Category name is required' });
 
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    const newCat = store.create('categories', {
+    if (!name) {
+      return res.status(400).json({
+        message: 'Category name is required'
+      });
+    }
+
+    const slug = name.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+    const category = await Category.create({
       name,
       slug,
       icon: icon || '📁',
@@ -29,87 +50,135 @@ const createCategory = (req, res) => {
       isActive: Boolean(isActive)
     });
 
-    res.status(201).json({ success: true, category: newCat });
+    return res.status(201).json({
+      success: true,
+      category
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// PUT /api/products/categories/:id (Admin)
-const updateCategory = (req, res) => {
+// PUT /api/products/categories/:id
+const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const existing = store.findById('categories', id);
-    if (!existing) return res.status(404).json({ message: 'Category not found' });
 
-    const updated = store.findByIdAndUpdate('categories', id, req.body);
-    res.json({ success: true, category: updated });
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid category ID' });
+    }
+
+    const updated = await Category.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    return res.json({
+      success: true,
+      category: updated
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// DELETE /api/products/categories/:id (Admin)
-const deleteCategory = (req, res) => {
+// DELETE /api/products/categories/:id
+const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const existing = store.findById('categories', id);
-    if (!existing) return res.status(404).json({ message: 'Category not found' });
 
-    store.deleteById('categories', id);
-    res.json({ success: true, message: 'Category deleted successfully' });
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid category ID' });
+    }
+
+    const deleted = await Category.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Category deleted successfully'
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 // GET /api/products
-// Customer view: only isUsed !== false
-// Admin view: includeDisabled=true returns all
-const getAllProducts = (req, res) => {
+const getAllProducts = async (req, res) => {
   try {
     const { category, search, includeDisabled } = req.query;
-    let products = store.getCollection('products');
 
-    // Customer filter: only active/used products
+    const filter = {};
+
     if (includeDisabled !== 'true') {
-      products = products.filter(p => p.isUsed !== false);
+      filter.isUsed = { $ne: false };
     }
 
-    // Category filter
     if (category && category !== 'ALL') {
-      products = products.filter(p => p.category === category);
+      filter.category = category;
     }
 
-    // Search query filter
     if (search && search.trim()) {
-      const q = search.toLowerCase().trim();
-      products = products.filter(p =>
-        (p.name && p.name.toLowerCase().includes(q)) ||
-        (p.description && p.description.toLowerCase().includes(q)) ||
-        (p.category && p.category.toLowerCase().includes(q))
+      const searchRegex = new RegExp(
+        search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'i'
       );
+
+      filter.$or = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex }
+      ];
     }
 
-    res.json({ success: true, count: products.length, products });
+    const products = await Product.find(filter).sort({
+      createdAt: -1
+    });
+
+    return res.json({
+      success: true,
+      count: products.length,
+      products
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 // GET /api/products/:id
-const getProductById = (req, res) => {
+const getProductById = async (req, res) => {
   try {
-    const product = store.findById('products', req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json({ success: true, product });
+    const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    return res.json({
+      success: true,
+      product
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// POST /api/products (Admin)
-const createProduct = (req, res) => {
+// POST /api/products
+const createProduct = async (req, res) => {
   try {
     const {
       name,
@@ -126,13 +195,23 @@ const createProduct = (req, res) => {
     } = req.body;
 
     if (!name || !category || basePrice === undefined) {
-      return res.status(400).json({ message: 'Name, Category, and Base Price are required' });
+      return res.status(400).json({
+        message: 'Name, Category, and Base Price are required'
+      });
     }
 
-    const newProduct = store.create('products', {
+    const price = Number(basePrice);
+
+    if (!Number.isFinite(price) || price < 0) {
+      return res.status(400).json({
+        message: 'Base price must be a valid non-negative number'
+      });
+    }
+
+    const product = await Product.create({
       name,
       category,
-      basePrice: Number(basePrice),
+      basePrice: price,
       unit,
       minQuantity: Number(minQuantity) || 1,
       description,
@@ -140,104 +219,209 @@ const createProduct = (req, res) => {
       badge,
       leadTimeDays: Number(leadTimeDays) || 1,
       image,
-      isUsed: Boolean(isUsed)
+      isUsed: Boolean(isUsed),
+      isActive: Boolean(isUsed)
     });
 
-    res.status(201).json({ success: true, product: newProduct });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// PUT /api/products/:id (Admin)
-const updateProduct = (req, res) => {
-  try {
-    const { id } = req.params;
-    const existing = store.findById('products', id);
-    if (!existing) return res.status(404).json({ message: 'Product not found' });
-
-    const updated = store.findByIdAndUpdate('products', id, req.body);
-    res.json({ success: true, product: updated });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// PATCH /api/products/:id/toggle-used (Admin)
-const toggleProductUsed = (req, res) => {
-  try {
-    const { id } = req.params;
-    const existing = store.findById('products', id);
-    if (!existing) return res.status(404).json({ message: 'Product not found' });
-
-    const newStatus = existing.isUsed === false ? true : false;
-    const updated = store.findByIdAndUpdate('products', id, { isUsed: newStatus });
-
-    res.json({
+    return res.status(201).json({
       success: true,
-      message: `Product "${existing.name}" is now ${newStatus ? 'USED (Visible to Customers)' : 'NOT USED (Disabled for Customers)'}`,
+      product
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// PUT /api/products/:id
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const updateData = { ...req.body };
+
+    if (updateData.basePrice !== undefined) {
+      updateData.basePrice = Number(updateData.basePrice);
+
+      if (!Number.isFinite(updateData.basePrice) || updateData.basePrice < 0) {
+        return res.status(400).json({
+          message: 'Invalid product price'
+        });
+      }
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    return res.json({
+      success: true,
+      product
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// PATCH /api/products/:id/toggle-used
+const toggleProductUsed = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const existing = await Product.findById(id);
+
+    if (!existing) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const newStatus = existing.isUsed === false;
+
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          isUsed: newStatus,
+          isActive: newStatus
+        }
+      },
+      { new: true }
+    );
+
+    return res.json({
+      success: true,
+      message: `Product "${existing.name}" is now ${
+        newStatus
+          ? 'USED (Visible to Customers)'
+          : 'NOT USED (Disabled for Customers)'
+      }`,
       product: updated
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// DELETE /api/products/:id (Admin)
-const deleteProduct = (req, res) => {
+// DELETE /api/products/:id
+const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const existing = store.findById('products', id);
-    if (!existing) return res.status(404).json({ message: 'Product not found' });
 
-    store.deleteById('products', id);
-    res.json({ success: true, message: 'Product deleted successfully' });
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const deleted = await Product.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Product deleted successfully'
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 // POST /api/products/calculate-price
-const calculateCustomPrice = (req, res) => {
+const calculateCustomPrice = async (req, res) => {
   try {
-    const { productId, width, height, quantity = 1, options = {} } = req.body;
-    const product = store.findById('products', productId);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    const {
+      productId,
+      width,
+      height,
+      quantity = 1,
+      options = {}
+    } = req.body;
+
+    if (!isValidId(productId)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
 
     let calculatedSqFt = 0;
-    let unitPrice = product.basePrice;
+    let unitPrice = Number(product.basePrice ?? product.price ?? 0);
     let total = 0;
+
+    const qty = Number(quantity);
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      return res.status(400).json({
+        message: 'Quantity must be greater than zero'
+      });
+    }
 
     if (product.unit === 'sq.ft') {
       const w = Number(width) || 1;
       const h = Number(height) || 1;
+
       calculatedSqFt = Math.max(1, w * h);
 
-      // Media option surcharge
       let optionMultiplier = 1;
-      if (options.gsm === 'Heavy 380 GSM' || options.gsm === 'Heavy 440 GSM') optionMultiplier += 0.2;
-      if (options.lamination === 'Gloss' || options.lamination === 'Matte') optionMultiplier += 0.25;
-      if (options.finish === 'Framed Iron Pipe' || options.finish === 'LED Backlit Box') unitPrice += 30;
 
-      const pricePerPiece = Math.round(calculatedSqFt * unitPrice * optionMultiplier);
-      total = pricePerPiece * Number(quantity);
+      if (
+        options.gsm === 'Heavy 380 GSM' ||
+        options.gsm === 'Heavy 440 GSM'
+      ) {
+        optionMultiplier += 0.2;
+      }
+
+      if (
+        options.lamination === 'Gloss' ||
+        options.lamination === 'Matte'
+      ) {
+        optionMultiplier += 0.25;
+      }
+
+      if (
+        options.finish === 'Framed Iron Pipe' ||
+        options.finish === 'LED Backlit Box'
+      ) {
+        unitPrice += 30;
+      }
+
+      const pricePerPiece = Math.round(
+        calculatedSqFt * unitPrice * optionMultiplier
+      );
+
+      total = pricePerPiece * qty;
     } else {
-      total = unitPrice * Number(quantity);
+      total = unitPrice * qty;
     }
 
-    res.json({
+    return res.json({
       success: true,
       productId: product._id,
       name: product.name,
       width: width || null,
       height: height || null,
       sqft: calculatedSqFt,
-      quantity: Number(quantity),
+      quantity: qty,
       unitPrice,
       totalAmount: total
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
