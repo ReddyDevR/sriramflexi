@@ -1,40 +1,131 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const store = require('../config/store');
+
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+const NotificationPreference = require('../models/NotificationPreference');
+
 const dispatcher = require('../services/notificationDispatcher');
 
 const generateToken = (id) => {
-  const secret = process.env.JWT_SECRET || 'sri_ramu_digital_super_secret_jwt_key_2026_production';
-  return jwt.sign({ id }, secret, { expiresIn: '30d' });
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is missing');
+  }
+
+  return jwt.sign(
+    { id },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 };
 
 // POST /api/auth/register
 const register = async (req, res) => {
   try {
-    const { name, email, password, phone, company, address } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      company,
+      address
+    } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
+      return res.status(400).json({
+        success: false,
+        message: 'Name, email and password are required'
+      });
     }
 
-    const existing = store.findOne('users', { email: email.toLowerCase().trim() });
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must contain at least 8 characters'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (
+      process.env.ADMIN_EMAIL &&
+      normalizedEmail === process.env.ADMIN_EMAIL.toLowerCase().trim()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'This email is reserved for administration'
+      });
+    }
+
+    const existing = await User.findOne({
+      email: normalizedEmail
+    });
+
     if (existing) {
-      return res.status(400).json({ message: 'An account with this email already exists' });
+      return res.status(409).json({
+        success: false,
+        message: 'Account already exists'
+      });
     }
 
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    const user = store.create('users', {
+    const user = await User.create({
       name,
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       password: hashedPassword,
-      phone: phone || '',
-      company: company || '',
-      address: address || '',
+      phone,
+      company,
+      address,
       role: 'CUSTOMER'
     });
 
+    await NotificationPreference.create({
+      userId: user._id,
+      email: {
+        orders: true,
+        payments: true,
+        offers: true,
+        system: true
+      },
+      push: {
+        orders: true,
+        payments: true,
+        offers: true,
+        system: true
+      },
+      inApp: {
+        orders: true,
+        payments: true,
+        offers: true,
+        system: true
+      }
+    });
+
+    const token = generateToken(user._id);
+
+    return res.status(201).json({
+      success: true,
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        company: user.company
+      }
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Registration failed'
+    });
+  }
+};
     // Create default notification preferences
     store.create('notificationPreferences', {
       userId: user._id,
@@ -83,39 +174,96 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password required' });
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
+      });
     }
 
-    const user = store.findOne('users', { email: email.toLowerCase().trim() });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const isAdminEmail =
+      process.env.ADMIN_EMAIL &&
+      normalizedEmail === process.env.ADMIN_EMAIL.toLowerCase().trim();
+
+    let user;
+
+    if (isAdminEmail) {
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (!adminPassword) {
+        return res.status(500).json({
+          success: false,
+          message: 'Admin authentication is not configured'
+        });
+      }
+
+      if (password !== adminPassword) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid email or password'
+        });
+      }
+
+      user = await User.findOne({
+        email: normalizedEmail,
+        role: 'ADMIN'
+      });
+
+      if (!user) {
+        return res.status(403).json({
+          success: false,
+          message: 'Admin account is not initialized'
+        });
+      }
+
+    } else {
+      user = await User.findOne({
+        email: normalizedEmail,
+        role: 'CUSTOMER'
+      }).select('+password');
+
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid email or password'
+        });
+      }
     }
 
-    const isMatch = bcrypt.compareSync(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account is disabled'
+      });
     }
 
     const token = generateToken(user._id);
 
-    res.json({
+    return res.json({
       success: true,
       token,
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         phone: user.phone,
-        company: user.company,
-        role: user.role
+        company: user.company
       }
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Login failed'
+    });
   }
 };
-
 // GET /api/auth/me
 const getMe = async (req, res) => {
   try {
