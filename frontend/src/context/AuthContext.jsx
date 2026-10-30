@@ -33,7 +33,6 @@ const DEFAULT_PREFERENCES = {
 
 export const AuthProvider = ({ children }) => {
 
-  // Real authentication state only
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
 
@@ -42,25 +41,28 @@ export const AuthProvider = ({ children }) => {
   );
 
   const [authLoading, setAuthLoading] = useState(true);
+  const [authExpired, setAuthExpired] = useState(false);
 
-  // Clear authentication completely
+  // Clear authentication
   const clearAuth = useCallback(() => {
+
     setUser(null);
     setToken(null);
     setPreferences(DEFAULT_PREFERENCES);
 
     localStorage.removeItem('sri_ramu_token');
     localStorage.removeItem('sri_ramu_user');
+
   }, []);
 
-  // Validate existing token using backend
-  const refreshAuth = useCallback(async (savedToken = token) => {
+  // Validate token with backend
+  const refreshAuth = useCallback(async (savedToken) => {
 
     if (!savedToken) {
       clearAuth();
+
       return {
-        success: false,
-        message: 'No authentication token found'
+        success: false
       };
     }
 
@@ -71,29 +73,35 @@ export const AuthProvider = ({ children }) => {
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${savedToken}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${savedToken}`
           }
         }
       );
 
       const data = await response.json();
 
-      if (!response.ok || !data.user) {
+      if (!response.ok || !data.user?._id) {
         throw new Error(
-          data.message || 'Session validation failed'
+          data.message || 'Session expired'
         );
       }
 
-      // Backend is the source of truth
-      setToken(savedToken);
-      setUser(data.user);
-
-      if (data.preferences) {
-        setPreferences(data.preferences);
+      if (!['ADMIN', 'CUSTOMER'].includes(data.user.role)) {
+        throw new Error('Invalid user role');
       }
 
-      localStorage.setItem('sri_ramu_token', savedToken);
+      setToken(savedToken);
+      setUser(data.user);
+      setAuthExpired(false);
+
+      setPreferences(
+        data.preferences || DEFAULT_PREFERENCES
+      );
+
+      localStorage.setItem(
+        'sri_ramu_token',
+        savedToken
+      );
 
       return {
         success: true,
@@ -102,64 +110,45 @@ export const AuthProvider = ({ children }) => {
 
     } catch (error) {
 
-      console.error('Authentication refresh failed:', error);
+      console.error('Token validation failed:', error);
 
       clearAuth();
+      setAuthExpired(true);
 
       return {
         success: false,
-        message: error.message
+        error: error.message
       };
     }
 
-  }, [token, clearAuth]);
+  }, [clearAuth]);
 
-  // Restore session on page refresh
+  // Validate saved token when application starts
   useEffect(() => {
-
-    let active = true;
 
     const initializeAuth = async () => {
 
-      const savedToken = localStorage.getItem('sri_ramu_token');
+      const savedToken = localStorage.getItem(
+        'sri_ramu_token'
+      );
 
-      if (!savedToken) {
-        if (active) {
-          clearAuth();
-          setAuthLoading(false);
-        }
-        return;
+      if (savedToken) {
+        await refreshAuth(savedToken);
+      } else {
+        clearAuth();
       }
 
-      if (active) {
-        setToken(savedToken);
-      }
-
-      await refreshAuth(savedToken);
-
-      if (active) {
-        setAuthLoading(false);
-      }
+      setAuthLoading(false);
     };
 
     initializeAuth();
 
-    return () => {
-      active = false;
-    };
+  }, [refreshAuth, clearAuth]);
 
-  }, []);
+  // Validate backend authentication response
+  const validateAuthResponse = async (response) => {
 
-  // Common API response handler
-  const parseAuthResponse = async (response) => {
-
-    let data;
-
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error('Invalid response from server');
-    }
+    const data = await response.json();
 
     if (!response.ok || data.success !== true) {
       throw new Error(
@@ -167,20 +156,21 @@ export const AuthProvider = ({ children }) => {
       );
     }
 
-    if (!data.token || !data.user || !data.user._id) {
+    if (
+      !data.token ||
+      !data.user ||
+      !data.user._id ||
+      !['ADMIN', 'CUSTOMER'].includes(data.user.role)
+    ) {
       throw new Error(
-        'Invalid login response from server'
+        'Invalid authentication response from server'
       );
-    }
-
-    if (!['ADMIN', 'CUSTOMER'].includes(data.user.role)) {
-      throw new Error('Invalid user role received from server');
     }
 
     return data;
   };
 
-  // Backend login
+  // Login
   const login = async (email, password) => {
 
     try {
@@ -199,23 +189,22 @@ export const AuthProvider = ({ children }) => {
         }
       );
 
-      const data = await parseAuthResponse(response);
+      const data = await validateAuthResponse(response);
 
-      // Store actual backend response
-      setToken(data.token);
       setUser(data.user);
+      setToken(data.token);
+      setAuthExpired(false);
+
+      setPreferences(DEFAULT_PREFERENCES);
 
       localStorage.setItem(
         'sri_ramu_token',
         data.token
       );
 
-      setPreferences(DEFAULT_PREFERENCES);
-
       return {
         success: true,
-        user: data.user,
-        token: data.token
+        user: data.user
       };
 
     } catch (error) {
@@ -229,7 +218,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Backend customer registration
+  // Customer registration
   const register = async (userData) => {
 
     try {
@@ -245,22 +234,22 @@ export const AuthProvider = ({ children }) => {
         }
       );
 
-      const data = await parseAuthResponse(response);
+      const data = await validateAuthResponse(response);
 
-      setToken(data.token);
       setUser(data.user);
+      setToken(data.token);
+      setAuthExpired(false);
+
+      setPreferences(DEFAULT_PREFERENCES);
 
       localStorage.setItem(
         'sri_ramu_token',
         data.token
       );
 
-      setPreferences(DEFAULT_PREFERENCES);
-
       return {
         success: true,
-        user: data.user,
-        token: data.token
+        user: data.user
       };
 
     } catch (error) {
@@ -276,7 +265,10 @@ export const AuthProvider = ({ children }) => {
 
   // Logout
   const logout = () => {
+
     clearAuth();
+    setAuthExpired(false);
+
   };
 
   // Update notification preferences
@@ -285,7 +277,7 @@ export const AuthProvider = ({ children }) => {
     if (!token) {
       return {
         success: false,
-        message: 'Please login first'
+        error: 'Please login first'
       };
     }
 
@@ -297,7 +289,7 @@ export const AuthProvider = ({ children }) => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify(newPrefs)
         }
@@ -313,11 +305,6 @@ export const AuthProvider = ({ children }) => {
 
       if (data.preferences) {
         setPreferences(data.preferences);
-      } else {
-        setPreferences(prev => ({
-          ...prev,
-          ...newPrefs
-        }));
       }
 
       return {
@@ -326,8 +313,6 @@ export const AuthProvider = ({ children }) => {
       };
 
     } catch (error) {
-
-      console.error('Preference update error:', error);
 
       return {
         success: false,
@@ -343,6 +328,8 @@ export const AuthProvider = ({ children }) => {
         token,
         preferences,
         authLoading,
+        authExpired,
+
         isAuthenticated: Boolean(user && token),
 
         login,
