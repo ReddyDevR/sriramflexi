@@ -126,50 +126,6 @@ const register = async (req, res) => {
     });
   }
 };
-    // Create default notification preferences
-    store.create('notificationPreferences', {
-      userId: user._id,
-      email: { orders: true, payments: true, offers: true, system: true },
-      push: { orders: true, payments: true, offers: true, system: true },
-      inApp: { orders: true, payments: true, offers: true, system: true }
-    });
-
-    // Welcome Flow: Customer Registration -> In-App + Push + Brevo Email
-    dispatcher.dispatch({
-      type: 'WELCOME',
-      priority: 'NORMAL',
-      title: 'Welcome to Sri Ramu Digital!',
-      message: `Welcome ${user.name}! Your printing account is ready. Browse flex, vinyl, and offset products.`,
-      userId: user._id,
-      customerEmail: user.email,
-      customerName: user.name,
-      targetRole: 'CUSTOMER',
-      data: {
-        actionUrl: '/products',
-        actionText: 'Explore Catalog'
-      },
-      idempotencyKey: `welcome_${user._id}`
-    });
-
-    const token = generateToken(user._id);
-
-    res.status(201).json({
-      success: true,
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        company: user.company,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 // POST /api/auth/login
 const login = async (req, res) => {
   try {
