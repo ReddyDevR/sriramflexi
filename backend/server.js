@@ -29,8 +29,19 @@ const app = express();
 const server = http.createServer(app);
 
 // Middleware
+const allowedOrigins = [
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS origin not allowed'));
+  },
+
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
