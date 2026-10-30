@@ -120,38 +120,42 @@ const initializeDatabase = async () => {
     console.log('Admin initialization completed');
 
     // Get initial seed data
-    const {
-      categories = [],
-      products = [],
-      coupons = []
-    } = getSeedData();
+   const {
+categories = [],
+products = [],
+coupons = []
+} = getSeedData();
 
-    // Seed Categories
-    const categoryCount = await Category.countDocuments();
+// Seed Categories
+const categoryCount = await Category.countDocuments();
 
-    if (categoryCount === 0 && categories.length > 0) {
-      await Category.insertMany(categories);
+if (categoryCount === 0 && categories.length > 0) {
+const validCategories = categories.map(({ _id, ...category }) => category);
 
-      console.log('Initial categories inserted successfully');
-    }
+await Category.insertMany(validCategories);
 
-    // Seed Products
-    const productCount = await Product.countDocuments();
+console.log('Initial categories inserted successfully');
+}
 
-    if (productCount === 0 && products.length > 0) {
-      await Product.insertMany(products);
+// Seed Products
+const productCount = await Product.countDocuments();
 
-      console.log('Initial products inserted successfully');
-    }
+if (productCount === 0 && products.length > 0) {
+const validProducts = products.map(({ _id, ...product }) => product);
 
-    // Seed Coupons
-    const couponCount = await Coupon.countDocuments();
+await Product.insertMany(validProducts);
 
-    if (couponCount === 0 && coupons.length > 0) {
-      await Coupon.insertMany(coupons);
+console.log('Initial products inserted successfully');
+}
 
-      console.log('Initial coupons inserted successfully');
-    }
+// Seed Coupons
+const couponCount = await Coupon.countDocuments();
+
+if (couponCount === 0 && coupons.length > 0) {
+await Coupon.insertMany(coupons);
+
+console.log('Initial coupons inserted successfully');
+}
 
     console.log('MongoDB initialization completed successfully');
 
