@@ -20,7 +20,12 @@ import {
   Sliders
 } from 'lucide-react';
 
-export default function Navbar({ onOpenTestModal, currentTab, setCurrentTab }) {
+export default function Navbar({
+  onOpenTestModal,
+  currentTab,
+  setCurrentTab,
+  onAuthNavigate
+}) {
   const { user, logout } = useAuth();
   const { unreadCount, setIsDrawerOpen } = useNotifications();
   const { isConnected, liveCounters } = useSocket();
@@ -227,7 +232,44 @@ export default function Navbar({ onOpenTestModal, currentTab, setCurrentTab }) {
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-          </div>
+            <div className="flex items-center gap-2">
+
+  {!user ? (
+    <>
+      <button
+        onClick={() => onAuthNavigate('login')}
+        className="px-3 py-2 text-sm font-semibold text-sky-600 hover:bg-sky-50 rounded-lg"
+      >
+        Sign In
+      </button>
+
+      <button
+        onClick={() => onAuthNavigate('register')}
+        className="px-3 py-2 text-sm font-semibold bg-sky-600 text-white rounded-lg hover:bg-sky-700"
+      >
+        Sign Up
+      </button>
+    </>
+  ) : (
+    <>
+      <span className="hidden lg:block text-sm font-semibold text-slate-700">
+        {user.name}
+      </span>
+
+      <button
+        onClick={() => {
+          logout();
+          setCurrentTab('home');
+        }}
+        className="px-3 py-2 text-sm font-semibold bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100"
+      >
+        Logout
+      </button>
+    </>
+  )}
+
+</div>
+          
         </div>
       </div>
 
