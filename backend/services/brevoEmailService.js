@@ -1,5 +1,5 @@
 const https = require('https');
-const store = require('../config/store');
+const EmailLog = require('../models/EmailLog');
 
 const getBrevoConfig = () => ({
   apiKey: process.env.BREVO_API_KEY || '',
@@ -394,7 +394,7 @@ class BrevoEmailService {
     const htmlContent = template.render(mergedVariables);
 
     // Create initial EmailLog record
-    const logDoc = store.create('emailLogs', {
+    const logDoc = await EmailLog.create({
       eventType: templateType,
       recipient: to,
       recipientName: toName || '',
@@ -411,7 +411,7 @@ class BrevoEmailService {
     // Check if Brevo API Key is configured
     if (!config.apiKey || config.apiKey.trim() === '') {
       console.log(`[BrevoEmailService Mock] API key not configured. Safely simulated transactional email to: ${to} (Subject: ${subject})`);
-      store.findByIdAndUpdate('emailLogs', logDoc._id, {
+      await EmailLog.findByIdAndUpdate(logDoc._id, {
         providerStatus: 'SIMULATED_SUCCESS',
         notes: 'API key not configured in .env - transactional email simulated and logged with full HTML preview.'
       });
@@ -441,7 +441,7 @@ class BrevoEmailService {
 
       const response = await this.executeBrevoPost(config.apiKey, payload);
 
-      store.findByIdAndUpdate('emailLogs', logDoc._id, {
+      await EmailLog.findByIdAndUpdate(logDoc._id, {
         providerStatus: 'DELIVERED',
         messageId: response.messageId || 'brevo_' + Date.now(),
         responseDetails: response
@@ -452,7 +452,7 @@ class BrevoEmailService {
     } catch (error) {
       console.error(`[BrevoEmailService Error] Failed to send email to ${to}:`, error.message);
 
-      store.findByIdAndUpdate('emailLogs', logDoc._id, {
+      await EmailLog.findByIdAndUpdate(logDoc._id, {
         providerStatus: 'FAILED',
         error: error.message
       });
