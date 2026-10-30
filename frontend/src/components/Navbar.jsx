@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function Navbar({ onOpenTestModal, currentTab, setCurrentTab }) {
-  const { user, switchRole, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { unreadCount, setIsDrawerOpen } = useNotifications();
   const { isConnected, liveCounters } = useSocket();
   const [isMuted, setIsMuted] = useState(soundManager.isMuted);
@@ -219,32 +219,7 @@ export default function Navbar({ onOpenTestModal, currentTab, setCurrentTab }) {
               )}
             </button>
 
-            {/* Role Switcher Button */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-              <button
-                onClick={() => {
-                  switchRole('CUSTOMER');
-                  setCurrentTab('home');
-                }}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
-                  !isAdmin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Customer
-              </button>
-              <button
-                onClick={() => {
-                  switchRole('ADMIN');
-                  setCurrentTab('admin-dashboard');
-                }}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
-                  isAdmin ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Admin
-              </button>
-            </div>
-
+           
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
