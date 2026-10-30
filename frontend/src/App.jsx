@@ -246,11 +246,15 @@ const handleNavigate = (tab, targetId = null) => {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
       {/* Top Navbar */}
-      <Navbar 
-        currentTab={currentTab} 
-        setCurrentTab={setCurrentTab} 
-        onOpenTestModal={() => setTestModalOpen(true)}
-      />
+      <Navbar
+  currentTab={currentTab}
+  setCurrentTab={handleNavigate}
+  onOpenTestModal={() => setTestModalOpen(true)}
+  onAuthNavigate={(mode) => {
+    setAuthMode(mode);
+    setCurrentTab(mode);
+  }}
+/>
 
       {/* Main Dynamic View Content */}
       <main className="flex-1">
