@@ -8,6 +8,13 @@ const { connectDB } = require('./config/db');
 const store = require('./config/store');
 const { getSeedData } = require('./data/seedData');
 const { initSocket } = require('./services/socketService');
+const initializeAdmin = require('./config/initializeAdmin');
+
+const Product = require('./models/Product');
+const Category = require('./models/Category');
+const Coupon = require('./models/Coupon');
+
+const { getSeedData } = require('./data/seedData');
 
 // Route imports
 const authRoutes = require('./routes/authRoutes');
@@ -68,6 +75,35 @@ app.use((err, req, res, next) => {
 // Seed Initial Data
 const initializeDatabase = async () => {
   await connectDB();
+
+  await initializeAdmin();
+
+  const {
+    categories,
+    products,
+    coupons
+  } = getSeedData();
+
+  const categoryCount = await Category.countDocuments();
+
+  if (categoryCount === 0) {
+    await Category.insertMany(categories);
+  }
+
+  const productCount = await Product.countDocuments();
+
+  if (productCount === 0) {
+    await Product.insertMany(products);
+  }
+
+  const couponCount = await Coupon.countDocuments();
+
+  if (couponCount === 0) {
+    await Coupon.insertMany(coupons);
+  }
+
+  console.log('MongoDB initialization completed');
+};
 
   const currentProducts = store.getCollection('products');
   const currentCategories = store.getCollection('categories');
