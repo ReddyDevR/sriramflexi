@@ -1,5 +1,5 @@
 const webpush = require('web-push');
-const store = require('../config/store');
+const PushSubscription = require('../models/PushSubscription');
 
 class WebPushService {
   constructor() {
@@ -11,7 +11,6 @@ class WebPushService {
     const publicKey = process.env.VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
     const subject = process.env.VAPID_SUBJECT || 'mailto:support@sriramuprinting.com';
-
     if (publicKey && privateKey) {
       try {
         webpush.setVapidDetails(subject, publicKey, privateKey);
@@ -32,58 +31,49 @@ class WebPushService {
   async sendPushNotification({ userId, title, body, data = {}, priority = 'NORMAL' }) {
     if (!this.configured) {
       console.log(`[WebPush Mock] Push notification logged for user ${userId}: "${title}" - ${body}`);
-      return { success: true, simulated: true, count: 0 };
+      return { success: true, simulated: true, sentCount: 0, failedCount: 0, count: 0 };
     }
 
-    // Find all push subscriptions for this user (multi-device support)
-    const subscriptions = store.find('pushSubscriptions', { userId });
-    if (!subscriptions || subscriptions.length === 0) {
-      return { success: true, message: 'No push subscriptions found for this user', count: 0 };
+    const subscriptions = await PushSubscription.find({ userId, isActive: { $ne: false } });
+    if (!subscriptions.length) {
+      return { success: true, message: 'No push subscriptions found for this user', sentCount: 0, failedCount: 0 };
     }
 
     const payload = JSON.stringify({
-      title,
-      body,
+      title, body,
       icon: '/icons/icon-192x192.png',
       badge: '/icons/badge-72x72.png',
       data: {
         url: data.actionUrl || data.url || '/orders',
         orderId: data.orderId || null,
-        type: data.type || 'SYSTEM',
-        priority,
-        timestamp: Date.now(),
-        ...data
+        type: data.type || 'SYSTEM', priority, timestamp: Date.now(), ...data
       }
     });
 
     const results = [];
-
     for (const sub of subscriptions) {
+      const storedSubscription = sub.subscription || {};
       const pushSubscription = {
-        endpoint: sub.endpoint,
-        keys: sub.keys
+        endpoint: storedSubscription.endpoint,
+        keys: storedSubscription.keys
       };
-
       try {
         await webpush.sendNotification(pushSubscription, payload, {
-          TTL: 60 * 60 * 24, // 24 hours
+          TTL: 60 * 60 * 24,
           urgency: priority === 'URGENT' ? 'high' : 'normal'
         });
-
+        sub.lastUsedAt = new Date();
+        await sub.save();
         results.push({ subscriptionId: sub._id, status: 'DELIVERED' });
       } catch (error) {
-        console.error(`[WebPush Error] Endpoint ${sub.endpoint.slice(0, 30)}...:`, error.statusCode, error.message);
-
-        // If subscription is expired or unsubscribed (410 Gone / 404 Not Found)
+        console.error(`[WebPush Error] Endpoint ${(storedSubscription.endpoint || '').slice(0, 30)}...:`, error.statusCode, error.message);
         if (error.statusCode === 410 || error.statusCode === 404) {
           console.log(`[WebPush] Removing expired subscription ${sub._id}`);
-          store.deleteById('pushSubscriptions', sub._id);
+          await PushSubscription.deleteOne({ _id: sub._id });
         }
-
         results.push({ subscriptionId: sub._id, status: 'FAILED', error: error.message });
       }
     }
-
     return {
       success: true,
       sentCount: results.filter(r => r.status === 'DELIVERED').length,
