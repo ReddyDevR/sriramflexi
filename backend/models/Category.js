@@ -5,26 +5,36 @@ const categorySchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true
+    },
+
+    slug: {
+      type: String,
+      trim: true
+    },
+
+    icon: {
+      type: String,
+      default: '📁'
     },
 
     description: {
       type: String,
-      default: '',
+      default: ''
     },
 
     image: {
       type: String,
-      default: '',
+      default: ''
     },
 
     isActive: {
       type: Boolean,
-      default: true,
-    },
+      default: true
+    }
   },
   {
-    timestamps: true,
-    strict: false,
+    timestamps: true
   }
 );
 
