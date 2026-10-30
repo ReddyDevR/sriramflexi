@@ -2,18 +2,26 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+require('dotenv').config({
+  path: path.join(__dirname, '.env')
+});
+
+// Database
 const { connectDB } = require('./config/db');
-const store = require('./config/store');
-//duplicate error seeddata
+
+// Socket service
 const { initSocket } = require('./services/socketService');
+
+// Admin initialization
 const initializeAdmin = require('./config/initializeAdmin');
 
+// MongoDB Models
 const Product = require('./models/Product');
 const Category = require('./models/Category');
 const Coupon = require('./models/Coupon');
 
+// Seed data
 const { getSeedData } = require('./data/seedData');
 
 // Route imports
@@ -25,10 +33,11 @@ const requestRoutes = require('./routes/requestRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
+// Express application
 const app = express();
 const server = http.createServer(app);
 
-// Middleware
+// CORS Configuration
 const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
@@ -41,16 +50,20 @@ app.use(cors({
 
     return callback(new Error('CORS origin not allowed'));
   },
-
   credentials: true
 }));
+
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10mb'
+}));
 
 // Initialize Socket.io
 initSocket(server);
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
@@ -59,17 +72,23 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check
+// Health Check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ONLINE',
     app: 'Sri Ramu Digital — Flex & Offset Printing',
     version: '2.0.0',
     timestamp: new Date().toISOString(),
+
     services: {
       socket: 'ACTIVE',
-      webPush: process.env.VAPID_PUBLIC_KEY ? 'CONFIGURED' : 'SIMULATION',
-      brevoEmail: process.env.BREVO_API_KEY ? 'CONFIGURED' : 'SIMULATION'
+      webPush: process.env.VAPID_PUBLIC_KEY
+        ? 'CONFIGURED'
+        : 'SIMULATION',
+
+      brevoEmail: process.env.BREVO_API_KEY
+        ? 'CONFIGURED'
+        : 'SIMULATION'
     }
   });
 });
@@ -77,103 +96,128 @@ app.get('/api/health', (req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('[Unhandled Server Error]', err);
+
   res.status(500).json({
     message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+
+    error: process.env.NODE_ENV === 'development'
+      ? err.stack
+      : undefined
   });
 });
 
-// Seed Initial Data
+// Initialize MongoDB and Seed Data
 const initializeDatabase = async () => {
-  await connectDB();
+  try {
+    // Connect MongoDB
+    await connectDB();
 
-  await initializeAdmin();
+    console.log('MongoDB connected successfully');
 
-  const {
-    categories,
-    products,
-    coupons
-  } = getSeedData();
+    // Initialize Admin
+    await initializeAdmin();
 
-  const categoryCount = await Category.countDocuments();
+    console.log('Admin initialization completed');
 
-  if (categoryCount === 0) {
-    await Category.insertMany(categories);
-  }
+    // Get initial seed data
+    const {
+      categories = [],
+      products = [],
+      coupons = []
+    } = getSeedData();
 
-  const productCount = await Product.countDocuments();
+    // Seed Categories
+    const categoryCount = await Category.countDocuments();
 
-  if (productCount === 0) {
-    await Product.insertMany(products);
-  }
+    if (categoryCount === 0 && categories.length > 0) {
+      await Category.insertMany(categories);
 
-  const couponCount = await Coupon.countDocuments();
-
-  if (couponCount === 0) {
-    await Coupon.insertMany(coupons);
-  }
-
-  console.log('MongoDB initialization completed');
-};
-
-  const currentProducts = store.getCollection('products');
-  const currentCategories = store.getCollection('categories');
-
-  // If store doesn't have the 30 products or categories, seed them
-  if (currentProducts.length < 30 || currentCategories.length === 0) {
-    const { users, categories, products, coupons } = getSeedData();
-    console.log('🌱 Seeding 30 dedicated products, categories, admin accounts, and coupons...');
-    
-    // Set exact products & categories requested
-    store.data.products = [];
-    store.data.categories = [];
-    
-    categories.forEach(c => store.create('categories', c));
-    products.forEach(p => store.create('products', p));
-
-    if (store.getCollection('users').length === 0) {
-      users.forEach(u => store.create('users', u));
-      coupons.forEach(c => store.create('coupons', c));
-
-      // Seed default admin and customer notification preferences
-      users.forEach(u => {
-        store.create('notificationPreferences', {
-          userId: u._id,
-          email: { orders: true, payments: true, offers: true, system: true },
-          push: { orders: true, payments: true, offers: true, system: true },
-          inApp: { orders: true, payments: true, offers: true, system: true }
-        });
-      });
+      console.log('Initial categories inserted successfully');
     }
 
-    store.save();
-    console.log('✅ Initial 30 products & categories populated successfully!');
+    // Seed Products
+    const productCount = await Product.countDocuments();
+
+    if (productCount === 0 && products.length > 0) {
+      await Product.insertMany(products);
+
+      console.log('Initial products inserted successfully');
+    }
+
+    // Seed Coupons
+    const couponCount = await Coupon.countDocuments();
+
+    if (couponCount === 0 && coupons.length > 0) {
+      await Coupon.insertMany(coupons);
+
+      console.log('Initial coupons inserted successfully');
+    }
+
+    console.log('MongoDB initialization completed successfully');
+
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+
+    throw error;
   }
 };
 
+// Start Server
 const PORT = process.env.PORT || 5000;
 
-const startServer = () => {
-  return new Promise((resolve) => {
-    initializeDatabase().then(() => {
+const startServer = async () => {
+  try {
+    // Initialize database before starting server
+    await initializeDatabase();
+
+    // Start HTTP server
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+
       server.listen(PORT, '0.0.0.0', () => {
-        console.log(`================================================================`);
-        console.log(`🚀 SRI RAMU DIGITAL — PRINTING PLATFORM BACKEND ACTIVE`);
-        console.log(`📡 Server running on: http://localhost:${PORT}`);
-        console.log(`⚡ Real-Time Socket.IO: Connected & Broadcasting on /socket.io`);
-        console.log(`🔔 Centralized Notification Dispatcher: READY`);
-        console.log(`✉️ Brevo Transactional Email: ${process.env.BREVO_API_KEY ? 'LIVE API' : 'SIMULATED LOGS'}`);
-        console.log(`📲 Web Push VAPID: READY`);
-        console.log(`================================================================`);
-        resolve(server);
+        server.removeListener('error', reject);
+        resolve();
       });
     });
-  });
+
+    console.log('============================================================');
+    console.log('SRI RAMU DIGITAL - PRINTING PLATFORM BACKEND ACTIVE');
+    console.log(`Server running on port: ${PORT}`);
+    console.log('Socket.IO: ACTIVE');
+    console.log('Notification Dispatcher: READY');
+
+    console.log(
+      `Brevo Email: ${
+        process.env.BREVO_API_KEY ? 'CONFIGURED' : 'SIMULATED'
+      }`
+    );
+
+    console.log(
+      `Web Push: ${
+        process.env.VAPID_PUBLIC_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'
+      }`
+    );
+
+    console.log('============================================================');
+
+    return server;
+
+  } catch (error) {
+    console.error('SERVER STARTUP FAILED:', error);
+
+    process.exit(1);
+  }
 };
 
+// Start only when executed directly
 if (require.main === module) {
   startServer();
 }
 
-module.exports = { app, server, startServer };
-
+// Exports
+module.exports = {
+  app,
+  server,
+  startServer,
+  initializeDatabase
+};
