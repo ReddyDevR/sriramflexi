@@ -5,42 +5,67 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
+    },
+
+    category: {
+      type: String,
+      required: true
+    },
+
+    basePrice: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+
+    unit: {
+      type: String,
+      default: 'sq.ft'
+    },
+
+    minQuantity: {
+      type: Number,
+      default: 1
     },
 
     description: {
       type: String,
-      default: '',
+      default: ''
     },
 
-    categoryId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category',
+    features: {
+      type: [String],
+      default: []
     },
 
-    price: {
+    badge: {
+      type: String,
+      default: 'New'
+    },
+
+    leadTimeDays: {
       type: Number,
-      default: 0,
+      default: 1
     },
 
     image: {
       type: String,
-      default: '',
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
+      default: ''
     },
 
     isUsed: {
       type: Boolean,
-      default: true,
+      default: true
     },
+
+    isActive: {
+      type: Boolean,
+      default: true
+    }
   },
   {
-    timestamps: true,
-    strict: false,
+    timestamps: true
   }
 );
 
